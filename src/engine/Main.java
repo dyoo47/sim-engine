@@ -13,7 +13,7 @@ import org.lwjgl.BufferUtils;
 public class Main {
 
     
-    private static int frameNumber = 1;
+    private static int frameNumber = 0;
     private static final String QUAD_PROGRAM_VS_SOURCE = Shader.readFromFile("src/shaders/quad.vert");
     private static final String QUAD_PROGRAM_FS_SOURCE = Shader.readFromFile("src/shaders/quad.frag");
     private static final String COMPUTE_SHADER_SOURCE = Shader.readFromFile("src/shaders/sim.comp");
@@ -31,7 +31,7 @@ public class Main {
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-    long window = glfwCreateWindow(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT, "svoraytracer", NULL, NULL);
+    long window = glfwCreateWindow(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT, "loading..." + frameNumber, NULL, NULL);
     if (window == NULL)
         throw new AssertionError("Failed to create the GLFW window");
     Input.setKeybinds(window);
@@ -115,7 +115,8 @@ public class Main {
     double frameTime = 0.0d;
     while (!glfwWindowShouldClose(window)) {
       glfwPollEvents();
-      //if(Input.keyDown(Input.SIM_STEP)){
+      glfwSetWindowTitle(window, "sim-engine v0.1 | Gen " + frameNumber);
+      if(!Input.keyDown(Input.SIM_STEP)){
         for(int i=0; i < Constants.WINDOW_HEIGHT; i++){
           for(int j=0; j < Constants.WINDOW_WIDTH; j++){
             int index = i*Constants.WINDOW_WIDTH + j;
@@ -144,8 +145,8 @@ public class Main {
         IntBuffer temp = curBuffer;
         curBuffer = nextBuffer;
         nextBuffer = temp;
-      //}
-      double startTime = System.currentTimeMillis();
+        frameNumber++;
+      }
       
       
       //nextBuffer.clear();
@@ -153,8 +154,8 @@ public class Main {
       glUseProgram(computeProgram);
       glDispatchCompute(numGroupsX, numGroupsY, 1);
       glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
       //Update frame
-      frameNumber++;
       glUniform1i(5, Constants.WINDOW_WIDTH);
       glUniform1i(6, Constants.WINDOW_HEIGHT); 
       
@@ -162,10 +163,6 @@ public class Main {
       glUseProgram(quadProgram);
       glDrawArrays(GL_TRIANGLES, 0, 3);
       glfwSwapBuffers(window);
-      //IntBuffer temp = curBuffer;
-      //curBuffer = nextBuffer;
-      //nextBuffer = temp;
-      frameTime = System.currentTimeMillis() - startTime;
     }
   }
 
